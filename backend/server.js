@@ -9,6 +9,8 @@ app.use(express.json({ limit: '50mb' }));
 
 const hf = new InferenceClient(process.env.HF_TOKEN);
 
+// ... (keep the top imports and setup the exact same)
+
 app.post('/api/solve', async (req, res) => {
   try {
     const { image } = req.body;
@@ -16,22 +18,22 @@ app.post('/api/solve', async (req, res) => {
       return res.status(400).json({ error: "No image data provided" });
     }
 
-    console.log("Image received! Routing to Hugging Face Vision model...");
+    console.log("Image received! Routing to SmolVLM...");
 
-    // 1. Use the modern chatCompletion API with a flagship, always-on VLM
+    // 1. Switch to Hugging Face's hyper-fast, lightweight vision model
     const response = await hf.chatCompletion({
-      model: "Qwen/Qwen2-VL-7B-Instruct",
+      model: "HuggingFaceTB/SmolVLM-Instruct",
       messages: [
         {
           role: "user",
           content: [
             { 
               type: "text", 
-              text: "Read the handwritten math equation in this image. Reply ONLY with the exact numbers and symbols you see (e.g., '1 + 2 ='). Do not add any other words or attempt to solve it." 
+              text: "Read the handwritten math equation in this image. Reply ONLY with the exact numbers and symbols you see. Do not add any other words." 
             },
             { 
               type: "image_url", 
-              image_url: { url: image } // Passes the raw data URL seamlessly
+              image_url: { url: image } 
             } 
           ]
         }
@@ -39,14 +41,11 @@ app.post('/api/solve', async (req, res) => {
       max_tokens: 20
     });
 
-    // 2. Extract the AI's transcription
     const parsedText = response.choices[0].message.content;
     console.log("AI Saw:", parsedText);
 
-    // 3. Clean up the text (remove any trailing equals signs or weird spacing)
     let cleanedExpression = parsedText.replace(/=/g, '').trim();
 
-    // 4. Safely evaluate the math equation in Node.js
     let evaluation = "";
     if (/^[0-9+\-*/().\s]+$/.test(cleanedExpression)) {
       try {
@@ -59,16 +58,18 @@ app.post('/api/solve', async (req, res) => {
       evaluation = "?";
     }
 
-    // 5. Package it into LaTeX for your React frontend
     const finalLaTeX = `${cleanedExpression} = ${evaluation}`;
     res.json({ result: finalLaTeX });
 
   } catch (error) {
-    console.error("Error processing request:", error);
-    res.status(500).json({ error: "Internal server error" });
+    // Upgraded Error Logging!
+    console.error("Hugging Face API Error:", error.message);
+    // Send the exact error message back to the frontend so you aren't flying blind
+    res.status(500).json({ error: "AI Processing Failed", details: error.message });
   }
 });
 
+// ... (keep the app.listen at the bottom the exact same)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
