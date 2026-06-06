@@ -9,8 +9,6 @@ app.use(express.json({ limit: '50mb' }));
 
 const hf = new InferenceClient(process.env.HF_TOKEN);
 
-// ... (keep the top imports and setup the exact same)
-
 app.post('/api/solve', async (req, res) => {
   try {
     const { image } = req.body;
@@ -18,36 +16,32 @@ app.post('/api/solve', async (req, res) => {
       return res.status(400).json({ error: "No image data provided" });
     }
 
-    console.log("Image received! Routing to SmolVLM...");
+    console.log("Image received! Routing to Blip Image Captioning API...");
 
-    // 1. Switch to Hugging Face's hyper-fast, lightweight vision model
-    const response = await hf.chatCompletion({
-      model: "HuggingFaceTB/SmolVLM-Instruct",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { 
-              type: "text", 
-              text: "Read the handwritten math equation in this image. Reply ONLY with the exact numbers and symbols you see. Do not add any other words." 
-            },
-            { 
-              type: "image_url", 
-              image_url: { url: image } 
-            } 
-          ]
-        }
-      ],
-      max_tokens: 20
+    // 1. Convert base64 data to a Web Blob for standard inference
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    const imageBlob = new Blob([imageBuffer]);
+
+    // 2. Call the serverless image-to-text pipeline
+    const response = await hf.imageToText({
+      model: "Salesforce/blip-image-captioning-large",
+      data: imageBlob,
     });
 
-    const parsedText = response.choices[0].message.content;
-    console.log("AI Saw:", parsedText);
+    const parsedText = response.generated_text;
+    console.log("Raw OCR Output:", parsedText); // Look at your Render logs to see what it saw!
 
-    let cleanedExpression = parsedText.replace(/=/g, '').trim();
+    // 3. Robust Regex: Strip out text words, letters, and isolate the math expression
+    // This removes common image captioning prefixes like "a drawing of", "written text", etc.
+    let cleanedExpression = parsedText
+      .replace(/[a-zA-Z]/g, '') // Strip out all alphabetic characters
+      .replace(/=/g, '')        // Strip out existing equals signs
+      .trim();
 
+    // 4. Safely evaluate the expression inside Node.js
     let evaluation = "";
-    if (/^[0-9+\-*/().\s]+$/.test(cleanedExpression)) {
+    if (/^[0-9+\-*/().\s]+$/.test(cleanedExpression) && cleanedExpression.length > 0) {
       try {
         const mathResult = new Function(`return ${cleanedExpression}`)();
         evaluation = mathResult.toString();
@@ -58,18 +52,16 @@ app.post('/api/solve', async (req, res) => {
       evaluation = "?";
     }
 
+    // 5. Send back formatted math representation
     const finalLaTeX = `${cleanedExpression} = ${evaluation}`;
     res.json({ result: finalLaTeX });
 
   } catch (error) {
-    // Upgraded Error Logging!
     console.error("Hugging Face API Error:", error.message);
-    // Send the exact error message back to the frontend so you aren't flying blind
     res.status(500).json({ error: "AI Processing Failed", details: error.message });
   }
 });
 
-// ... (keep the app.listen at the bottom the exact same)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
