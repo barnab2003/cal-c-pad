@@ -109,12 +109,12 @@ const MathCanvas = () => {
       });
 
       const data = await response.json();
-
+      
       if (response.ok) {
-        // Update the state with the mock LaTeX sent from the server
-        setResult(data.latex);
+        // Use data.result since that is what the backend sends!
+        setResult(data.result);
       } else {
-        setResult("Error: " + data.error);
+        setResult("Error: " + (data.error || "Unknown server error"));
       }
     } catch (error) {
       console.error("Failed to connect to server:", error);
