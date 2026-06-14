@@ -1,29 +1,47 @@
 import React, { useRef, useState, useEffect } from 'react';
-import 'katex/dist/katex.min.css'; // The styling that makes the math look good
-import { BlockMath } from 'react-katex'; // The component that renders the math
-import './MathCanvas.css'; //
+import 'katex/dist/katex.min.css';
+import { BlockMath } from 'react-katex';
+import './MathCanvas.css';
+
 const MathCanvas = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  
-  // NEW: State variables to handle the server response and loading status
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    canvas.width = 800; 
-    canvas.height = 500;
+    // Set a responsive internal resolution
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 400; 
     
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineCap = 'round';
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = '#000000';
     ctx.lineWidth = 4;
+
+    // Handle window resize to keep canvas size accurate
+    const handleResize = () => {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+        
+        canvas.width = canvas.parentElement.clientWidth;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(tempCanvas, 0, 0);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- MOUSE & TOUCH EVENTS (Unchanged) ---
+  // --- MOUSE & TOUCH EVENTS ---
   const startDrawing = ({ nativeEvent }) => {
     const { offsetX, offsetY } = nativeEvent;
     const ctx = canvasRef.current.getContext('2d');
@@ -85,12 +103,12 @@ const MathCanvas = () => {
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff'; // Fill with white instead of making it transparent
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    setResult(''); // Clear the result text when the canvas is cleared
+    setResult('');
   };
 
-  // --- CAPTURE AND SEND (The Bridge) ---
+  // --- CAPTURE AND SEND ---
   const calculateMath = async () => {
     const canvas = canvasRef.current;
     const base64Image = canvas.toDataURL('image/png');
@@ -99,76 +117,97 @@ const MathCanvas = () => {
     setResult('');
 
     try {
-      // Send the POST request to your Node.js server
       const response = await fetch('https://ai-i-pad-style-calculator.onrender.com/api/solve', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64Image })
       });
 
       const data = await response.json();
       
       if (response.ok) {
-        // Use data.result since that is what the backend sends!
         setResult(data.result);
       } else {
         setResult("Error: " + (data.error || "Unknown server error"));
       }
     } catch (error) {
       console.error("Failed to connect to server:", error);
-      setResult("Error: Could not connect to the server. Is it running?");
+      setResult("Error: Could not connect to the server.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="app-container">
+    <div className="app-wrapper">
       
-      {/* The Controls Area */}
-      <div className="controls-bar">
-        <button 
-          onClick={clearCanvas}
-          className="neo-btn btn-clear"
-        >
-          Clear Canvas
-        </button>
-
-        <button 
-          onClick={calculateMath}
-          disabled={isLoading}
-          className="neo-btn btn-solve"
-        >
-          {isLoading ? 'Solving...' : 'Solve Equation'}
-        </button>
-      </div>
-
-      {/* The Canvas */}
-      <div className="canvas-container">
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={500}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startTouchDrawing}
-          onTouchMove={drawTouch}
-          onTouchEnd={stopTouchDrawing}
-          onTouchCancel={stopTouchDrawing}
-          style={{ cursor: 'crosshair', touchAction: 'none' }} 
-        />
-      </div>
-
-      {/* The LaTeX Result */}
-      {result && (
-        <div className="result-container">
-          <BlockMath math={result.replace(/\$/g, '')} />
+      {/* HEADER SECTION */}
+      <header className="neo-header">
+        <div className="logo-container">
+          <h1 className="logo-text">CAL-C-PAD</h1>
         </div>
-      )}
+        <nav className="neo-nav">
+          <a href="#how-it-works" className="nav-link">How it works</a>
+          <a href="#contacts" className="nav-link">Contacts</a>
+        </nav>
+      </header>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="main-layout">
+        
+        {/* LEFT PANEL: Hero & Info */}
+        <section className="hero-section">
+            <h2 className="hero-title">Handwritten<br/>Math Solver</h2>
+            <p className="hero-subtitle">Draw your complex equations on the canvas and let our AI engine compute the exact result in seconds.</p>
+            
+            <div className="stats-badge neo-box">
+              <span className="badge-highlight">100%</span> Accurate
+            </div>
+        </section>
+
+        {/* RIGHT PANEL: Interactive App */}
+        <section className="interaction-section">
+          
+          <div className="canvas-container neo-box">
+            <div className="canvas-header">
+                <span>Draw here:</span>
+            </div>
+            <canvas
+              ref={canvasRef}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startTouchDrawing}
+              onTouchMove={drawTouch}
+              onTouchEnd={stopTouchDrawing}
+              onTouchCancel={stopTouchDrawing}
+              style={{ cursor: 'crosshair', touchAction: 'none' }} 
+            />
+          </div>
+
+          <div className="controls-bar">
+            <button onClick={clearCanvas} className="neo-btn btn-clear">
+              Clear Canvas
+            </button>
+            <button onClick={calculateMath} disabled={isLoading} className="neo-btn btn-solve">
+              {isLoading ? 'Calculating...' : 'Solve Equation'}
+            </button>
+          </div>
+
+          {result && (
+            <div className="result-container neo-box">
+              <BlockMath math={result.replace(/\$/g, '')} />
+            </div>
+          )}
+
+        </section>
+      </main>
+
+      {/* FOOTER SECTION */}
+      <footer className="neo-footer">
+        <p>&copy; {new Date().getFullYear()} CAL-C-PAD. Built for the modern web.</p>
+      </footer>
 
     </div>
   );
