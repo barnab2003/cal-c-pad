@@ -8,21 +8,25 @@ const MathCanvas = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // New State for Drawing Tools
+  const [tool, setTool] = useState('pen'); // 'pen', 'line', 'rect', 'circle'
+  const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const [snapshot, setSnapshot] = useState(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    // Set a responsive internal resolution
     canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = 400; 
+    canvas.height = 500; // Big, spacious drawing pad
     
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#1A1B26'; // Dark background for the canvas to match theme
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#3EE08F'; // Neon mint ink
+    ctx.lineWidth = 3;
 
-    // Handle window resize to keep canvas size accurate
     const handleResize = () => {
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width;
@@ -30,89 +34,89 @@ const MathCanvas = () => {
         tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
         
         canvas.width = canvas.parentElement.clientWidth;
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#1A1B26';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(tempCanvas, 0, 0);
         ctx.lineCap = 'round';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#3EE08F';
+        ctx.lineWidth = 3;
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- MOUSE & TOUCH EVENTS ---
-  const startDrawing = ({ nativeEvent }) => {
-    const { offsetX, offsetY } = nativeEvent;
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.beginPath();
-    ctx.moveTo(offsetX, offsetY);
-    setIsDrawing(true);
-  };
-
-  const draw = ({ nativeEvent }) => {
-    if (!isDrawing) return;
-    const { offsetX, offsetY } = nativeEvent;
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.lineTo(offsetX, offsetY);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.closePath();
-    setIsDrawing(false);
-  };
-
-  const getTouchPos = (canvas, touchEvent) => {
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: touchEvent.touches[0].clientX - rect.left,
-      y: touchEvent.touches[0].clientY - rect.top
-    };
-  };
-
-  const startTouchDrawing = (e) => {
-    e.preventDefault();
+  const getPos = (e) => {
     const canvas = canvasRef.current;
-    const { x, y } = getTouchPos(canvas, e.nativeEvent);
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startInteraction = (e) => {
+    e.preventDefault();
+    const { x, y } = getPos(e);
+    const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+
+    setIsDrawing(true);
+    setStartX(x);
+    setStartY(y);
+    // Take a snapshot of the canvas before drawing the new shape
+    setSnapshot(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    
     ctx.beginPath();
     ctx.moveTo(x, y);
-    setIsDrawing(true);
   };
 
-  const drawTouch = (e) => {
+  const drawInteraction = (e) => {
     if (!isDrawing) return;
     e.preventDefault();
+    const { x, y } = getPos(e);
     const canvas = canvasRef.current;
-    const { x, y } = getTouchPos(canvas, e.nativeEvent);
     const ctx = canvas.getContext('2d');
-    ctx.lineTo(x, y);
-    ctx.stroke();
+
+    // If drawing a shape, restore the snapshot first to clear the preview
+    if (tool !== 'pen' && snapshot) {
+      ctx.putImageData(snapshot, 0, 0);
+    }
+
+    if (tool === 'pen') {
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    } else if (tool === 'line') {
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    } else if (tool === 'rect') {
+      ctx.beginPath();
+      ctx.rect(startX, startY, x - startX, y - startY);
+      ctx.stroke();
+    } else if (tool === 'circle') {
+      ctx.beginPath();
+      const radius = Math.sqrt(Math.pow(startX - x, 2) + Math.pow(startY - y, 2));
+      ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
   };
 
-  const stopTouchDrawing = (e) => {
+  const stopInteraction = (e) => {
     e.preventDefault();
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.closePath();
     setIsDrawing(false);
   };
 
-  // --- CLEAR FUNCTION ---
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#1A1B26';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     setResult('');
   };
 
-  // --- CAPTURE AND SEND ---
   const calculateMath = async () => {
     const canvas = canvasRef.current;
     const base64Image = canvas.toDataURL('image/png');
-    
     setIsLoading(true);
     setResult('');
 
@@ -122,93 +126,84 @@ const MathCanvas = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64Image })
       });
-
       const data = await response.json();
-      
       if (response.ok) {
         setResult(data.result);
       } else {
-        setResult("Error: " + (data.error || "Unknown server error"));
+        setResult("\\text{Error: " + (data.error || "Unknown server error") + "}");
       }
     } catch (error) {
-      console.error("Failed to connect to server:", error);
-      setResult("Error: Could not connect to the server.");
+      setResult("\\text{Error: Could not connect to the server.}");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="app-wrapper">
+    <div className="dark-theme-wrapper">
       
       {/* HEADER SECTION */}
-      <header className="neo-header">
+      <header className="glass-header">
         <div className="logo-container">
+          <div className="logo-icon"></div>
           <h1 className="logo-text">CAL-C-PAD</h1>
         </div>
-        <nav className="neo-nav">
-          <a href="#how-it-works" className="nav-link">How it works</a>
-          <a href="#contacts" className="nav-link">Contacts</a>
+        <nav className="glass-nav">
+          <a href="#home">Home</a>
+          <a href="#about">About</a>
+          <a href="#how">How it Works</a>
         </nav>
+        <button className="btn-outline">Log in</button>
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="main-layout">
-        
-        {/* LEFT PANEL: Hero & Info */}
-        <section className="hero-section">
-            <h2 className="hero-title">Handwritten<br/>Math Solver</h2>
-            <p className="hero-subtitle">Draw your complex equations on the canvas and let our AI engine compute the exact result in seconds.</p>
-            
-            <div className="stats-badge neo-box">
-              <span className="badge-highlight">100%</span> Accurate
-            </div>
-        </section>
+      <main className="main-content">
+        <div className="hero-text">
+          <h2>Make your complex math<br/>make complete sense</h2>
+          <p>Draw equations, geometry, or physics diagrams instantly. Our AI engine dives into fully connected details to understand what drives your problem.</p>
+        </div>
 
-        {/* RIGHT PANEL: Interactive App */}
-        <section className="interaction-section">
+        <div className="app-container glass-card">
           
-          <div className="canvas-container neo-box">
-            <div className="canvas-header">
-                <span>Draw here:</span>
+          {/* TOOLBAR */}
+          <div className="toolbar">
+            <div className="tool-group">
+              <button className={`tool-btn ${tool === 'pen' ? 'active' : ''}`} onClick={() => setTool('pen')}>✎ Pen</button>
+              <button className={`tool-btn ${tool === 'line' ? 'active' : ''}`} onClick={() => setTool('line')}>— Line</button>
+              <button className={`tool-btn ${tool === 'rect' ? 'active' : ''}`} onClick={() => setTool('rect')}>▭ Rect</button>
+              <button className={`tool-btn ${tool === 'circle' ? 'active' : ''}`} onClick={() => setTool('circle')}>◯ Circle</button>
             </div>
+            <div className="action-group">
+              <button onClick={clearCanvas} className="btn-text">Clear</button>
+              <button onClick={calculateMath} disabled={isLoading} className="btn-primary">
+                {isLoading ? 'Solving...' : 'Calculate Now'}
+              </button>
+            </div>
+          </div>
+
+          {/* CANVAS */}
+          <div className="canvas-wrapper">
             <canvas
               ref={canvasRef}
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startTouchDrawing}
-              onTouchMove={drawTouch}
-              onTouchEnd={stopTouchDrawing}
-              onTouchCancel={stopTouchDrawing}
-              style={{ cursor: 'crosshair', touchAction: 'none' }} 
+              onMouseDown={startInteraction}
+              onMouseMove={drawInteraction}
+              onMouseUp={stopInteraction}
+              onMouseLeave={stopInteraction}
+              onTouchStart={startInteraction}
+              onTouchMove={drawInteraction}
+              onTouchEnd={stopInteraction}
+              onTouchCancel={stopInteraction}
             />
           </div>
 
-          <div className="controls-bar">
-            <button onClick={clearCanvas} className="neo-btn btn-clear">
-              Clear Canvas
-            </button>
-            <button onClick={calculateMath} disabled={isLoading} className="neo-btn btn-solve">
-              {isLoading ? 'Calculating...' : 'Solve Equation'}
-            </button>
-          </div>
-
+          {/* RESULT */}
           {result && (
-            <div className="result-container neo-box">
-              <BlockMath math={result.replace(/\$/g, '')} />
+            <div className="result-glass">
+              <BlockMath math={result} />
             </div>
           )}
-
-        </section>
+        </div>
       </main>
-
-      {/* FOOTER SECTION */}
-      <footer className="neo-footer">
-        <p>&copy; {new Date().getFullYear()} CAL-C-PAD. Built for the modern web.</p>
-      </footer>
-
     </div>
   );
 };

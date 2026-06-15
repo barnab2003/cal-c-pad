@@ -1,234 +1,238 @@
-/* --- ROOT VARIABLES --- */
 :root {
-  --bg-color: #FFC000; /* The vibrant yellow from your image */
-  --pure-white: #FFFFFF;
-  --pure-black: #000000;
-  --border-thickness: 4px;
-  --border-radius: 12px;
-  --shadow-offset: 8px;
+  --bg-deep: #13111C;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --accent-mint: #3EE08F;
+  --accent-mint-glow: rgba(62, 224, 143, 0.3);
+  --text-main: #FFFFFF;
+  --text-muted: #A09EAB;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--pure-black);
+  background-color: var(--bg-deep);
+  color: var(--text-main);
   min-height: 100vh;
-  overflow-x: hidden;
+  /* subtle radial gradient mimicking the image background */
+  background-image: radial-gradient(circle at 50% 100%, rgba(62,224,143,0.05) 0%, transparent 50%);
 }
 
-/* --- REUSABLE NEUBRUTALIST CLASSES --- */
-.neo-box {
-  background-color: var(--pure-white);
-  border: var(--border-thickness) solid var(--pure-black);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--pure-black);
-}
-
-.neo-btn {
-  background-color: var(--pure-white);
-  border: var(--border-thickness) solid var(--pure-black);
-  border-radius: var(--border-radius);
-  padding: 12px 24px;
-  font-weight: 800;
-  font-size: 1.1rem;
-  cursor: pointer;
-  box-shadow: 4px 4px 0px var(--pure-black);
-  transition: all 0.1s ease;
-}
-
-.neo-btn:active {
-  transform: translate(4px, 4px);
-  box-shadow: 0px 0px 0px var(--pure-black);
-}
-
-.neo-btn:disabled {
-  background-color: #e0e0e0;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 4px 4px 0px var(--pure-black);
-}
-
-/* --- MAIN LAYOUT SHELL --- */
-.app-wrapper {
+.dark-theme-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: 20px 40px;
-  max-width: 1400px;
-  margin: 0 auto;
+  align-items: center;
 }
 
-/* --- HEADER --- */
-.neo-header {
+/* HEADER */
+.glass-header {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 20px;
-  border-bottom: var(--border-thickness) solid var(--pure-black);
-  margin-bottom: 40px;
+  padding: 20px 0;
+  margin-bottom: 60px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--accent-mint);
+  border-radius: 4px;
+  box-shadow: 0 0 10px var(--accent-mint-glow);
 }
 
 .logo-text {
-  font-size: 2.5rem;
-  font-weight: 900;
-  letter-spacing: -1px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
-.neo-nav {
+.glass-nav {
   display: flex;
   gap: 30px;
 }
 
-.nav-link {
-  color: var(--pure-black);
+.glass-nav a {
+  color: var(--text-muted);
   text-decoration: none;
-  font-weight: 700;
-  font-size: 1.2rem;
-  transition: opacity 0.2s;
+  font-size: 0.95rem;
+  transition: color 0.2s;
 }
 
-.nav-link:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 3px;
-  text-underline-offset: 4px;
+.glass-nav a:hover {
+  color: var(--text-main);
 }
 
-/* --- HERO & INTERACTION (TWO COLUMNS) --- */
-.main-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  flex: 1; /* Pushes footer down */
-}
-
-/* Left Panel */
-.hero-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.hero-title {
-  font-size: 5rem;
-  line-height: 1;
-  font-weight: 900;
-  margin-bottom: 20px;
-  letter-spacing: -2px;
-}
-
-.hero-subtitle {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-bottom: 40px;
-  max-width: 90%;
-}
-
-.stats-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 10px 20px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  align-self: flex-start;
-}
-
-.badge-highlight {
-  background-color: var(--pure-black);
-  color: var(--bg-color);
-  padding: 4px 8px;
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-glass);
+  color: var(--text-main);
+  padding: 8px 20px;
   border-radius: 6px;
-  margin-right: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-/* Right Panel */
-.interaction-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.btn-outline:hover {
+  border-color: var(--accent-mint);
+  color: var(--accent-mint);
 }
 
-.canvas-container {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* HERO SECTION */
+.hero-text {
+  text-align: center;
+  margin-bottom: 50px;
 }
 
-.canvas-header {
-  background-color: #f4f4f4;
-  padding: 10px 20px;
-  border-bottom: var(--border-thickness) solid var(--pure-black);
+.hero-text h2 {
+  font-size: 3.5rem;
   font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+
+.hero-text p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* GLASS CARD (The Main App) */
+.glass-card {
+  width: 100%;
+  max-width: 1000px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+/* TOOLBAR */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.tool-group {
+  display: flex;
+  gap: 10px;
+}
+
+.tool-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tool-btn:hover {
+  color: var(--text-main);
+}
+
+.tool-btn.active {
+  background: rgba(62, 224, 143, 0.1);
+  color: var(--accent-mint);
+  border-color: rgba(62, 224, 143, 0.3);
+}
+
+.action-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.btn-text {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.btn-text:hover { color: var(--text-main); }
+
+.btn-primary {
+  background-color: var(--accent-mint);
+  color: var(--bg-deep);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 0 15px var(--accent-mint-glow);
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(62, 224, 143, 0.5);
+}
+
+.btn-primary:disabled {
+  background-color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* CANVAS */
+.canvas-wrapper {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-glass);
 }
 
 canvas {
-  width: 100%;
   display: block;
+  width: 100%;
+  cursor: crosshair;
+  touch-action: none;
 }
 
-.controls-bar {
-  display: flex;
-  gap: 15px;
-}
-
-.btn-solve {
-  background-color: var(--pure-black);
-  color: var(--pure-white);
-  flex: 2;
-}
-
-.btn-clear {
-  flex: 1;
-}
-
-.result-container {
+/* RESULT */
+.result-glass {
+  margin-top: 20px;
   padding: 20px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+  color: var(--accent-mint);
   font-size: 1.5rem;
   overflow-x: auto;
-  overflow-y: auto; /* Allow vertical scrolling for long physics answers */
-  min-height: 100px; /* Give it room to breathe */
 }
 
-/* --- FOOTER --- */
-.neo-footer {
-  margin-top: 60px;
-  padding-top: 20px;
-  border-top: var(--border-thickness) solid var(--pure-black);
-  text-align: center;
-  font-weight: 600;
-}
-
-/* --- RESPONSIVE DESIGN (MOBILE) --- */
-@media (max-width: 968px) {
-  .app-wrapper {
-    padding: 15px;
-  }
-
-  .main-layout {
-    grid-template-columns: 1fr; /* Stack columns vertically */
-    gap: 40px;
-  }
-
-  .hero-title {
-    font-size: 3.5rem;
-  }
-
-  .neo-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .controls-bar {
-    flex-direction: column;
-  }
-
-  .neo-btn {
-    width: 100%; /* Full width buttons on phone */
-  }
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .hero-text h2 { font-size: 2.5rem; }
+  .glass-header { flex-direction: column; gap: 20px; }
+  .glass-nav { display: none; /* Hide links on mobile for cleaner look */ }
+  .toolbar { flex-direction: column; gap: 20px; align-items: stretch; }
+  .tool-group { justify-content: center; flex-wrap: wrap; }
+  .action-group { justify-content: space-between; }
 }
