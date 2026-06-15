@@ -30,11 +30,16 @@ app.post('/api/solve', async (req, res) => {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     // The new God-Mode Prompt
-    const prompt = `You are an expert math and physics engine. Analyze the provided image and solve the problem. 
-    - If it is basic arithmetic, calculate the result.
-    - If it is a system of equations, solve for the variables (e.g., x=..., y=...).
-    - If it is a physics free-body diagram, identify the forces and solve for the obvious unknown.
-    CRITICAL INSTRUCTION: Output ONLY raw LaTeX code representing the final solution. Do NOT use markdown blocks. Do not add any conversational text. Use '\\\\' for line breaks.`;
+    const prompt = `You are an expert math and physics engine. Analyze the image and solve the problem step-by-step.
+    - Basic arithmetic: calculate the result.
+    - System of equations: solve for the variables.
+    - Physics: identify forces and solve for the unknown.
+    
+    CRITICAL INSTRUCTION: Output ONLY KaTeX-compatible math LaTeX. 
+    DO NOT output \\documentclass, \\usepackage, \\begin{document}, or \\end{document}. 
+    DO NOT use markdown formatting like \`\`\`latex.
+    If you need to include English words, you MUST wrap them in \\text{your words here}. 
+    Separate every step with a double backslash (\\\\).`;
     
     const response = await model.generateContent([prompt, imagePart]);
     
@@ -42,9 +47,16 @@ app.post('/api/solve', async (req, res) => {
     let finalLaTeX = response.response.text().trim();
     
     // Safety check: Remove markdown formatting if Gemini disobeys and includes it
-    finalLaTeX = finalLaTeX.replace(/^```latex/, '').replace(/^```/, '').replace(/```$/, '').trim();
+    finalLaTeX = finalLaTeX
+      .replace(/```latex/gi, '')         // Strip markdown start
+      .replace(/```/g, '')               // Strip markdown end
+      .replace(/\\documentclass\{.*?\}/g, '') // Strip document class
+      .replace(/\\usepackage\{.*?\}/g, '')    // Strip packages
+      .replace(/\\begin\{document\}/g, '')    // Strip document start
+      .replace(/\\end\{document\}/g, '')      // Strip document end
+      .trim();
 
-    console.log("Gemini Output:", finalLaTeX);
+    console.log("Cleaned KaTeX Output:", finalLaTeX);
 
     // Send it directly to the React frontend
     res.json({ result: finalLaTeX });
