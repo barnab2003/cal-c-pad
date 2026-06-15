@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import 'katex/dist/katex.min.css';
 import { BlockMath } from 'react-katex';
 import './MathCanvas.css';
-import customLogo from './assets/my-logo.png';
+import customLogo from '../assets/my-logo.png';
 
 const MathCanvas = () => {
   const canvasRef = useRef(null);
