@@ -48,12 +48,12 @@ body {
   gap: 10px;
 }
 
-.logo-icon {
-  width: 24px;
-  height: 24px;
-  background-color: var(--accent-mint);
-  border-radius: 4px;
-  box-shadow: 0 0 10px var(--accent-mint-glow);
+.custom-logo-img {
+  height: 32px; /* Adjust this value to make your logo bigger or smaller */
+  width: auto;  /* Keeps your logo's original aspect ratio */
+  object-fit: contain;
+  /* Optional: Keep a subtle glow around your custom logo */
+  filter: drop-shadow(0 0 8px rgba(62, 224, 143, 0.4)); 
 }
 
 .logo-text {

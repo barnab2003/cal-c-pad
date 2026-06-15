@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import 'katex/dist/katex.min.css';
 import { BlockMath } from 'react-katex';
 import './MathCanvas.css';
+import customLogo from './assets/my-logo.png';
 
 const MathCanvas = () => {
   const canvasRef = useRef(null);
@@ -190,7 +191,8 @@ const MathCanvas = () => {
     <div className="dark-theme-wrapper">
       <header className="glass-header">
         <div className="logo-container">
-          <div className="logo-icon"></div>
+          
+          <img src={customLogo} alt="CAL-C-PAD Logo" className="custom-logo-img" />
           <h1 className="logo-text">CAL-C-PAD</h1>
         </div>
         <nav className="glass-nav">
@@ -203,8 +205,8 @@ const MathCanvas = () => {
 
       <main className="main-content">
         <div className="hero-text">
-          <h2>Make your complex math<br/>make complete sense</h2>
-          <p>Draw equations, geometry, or physics diagrams instantly. Our AI engine dives into fully connected details to understand what drives your problem.</p>
+          <h2>Make your complex problems<br/>make complete sense</h2>
+          <p>Draw equations, geometry, or physics diagrams and get your solutions instantly.</p>
         </div>
 
         <div className="app-container glass-card">

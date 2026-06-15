@@ -5,7 +5,7 @@ import './components/MathCanvas.css';
 
 function App() {
   return (
-    <div style={{ paddingTop: '40px', textAlign: 'center' }}>
+    <div >
       
       {/* The New Graphic Header */}
       {/* <div className="header-container">
