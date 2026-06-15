@@ -9,23 +9,33 @@ const MathCanvas = () => {
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  // New State for Drawing Tools
-  const [tool, setTool] = useState('pen'); // 'pen', 'line', 'rect', 'circle'
+  // Tools & Interaction State
+  const [tool, setTool] = useState('pen'); // 'pen', 'line', 'rect', 'circle', 'eraser'
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
   const [snapshot, setSnapshot] = useState(null);
 
+  // Undo History State
+  const [history, setHistory] = useState([]);
+  const [historyStep, setHistoryStep] = useState(-1);
+
+  // Initialize Canvas and set the base history state
   useEffect(() => {
     const canvas = canvasRef.current;
     canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = 500; // Big, spacious drawing pad
+    canvas.height = 500; 
     
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#1A1B26'; // Dark background for the canvas to match theme
+    ctx.fillStyle = '#1A1B26'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#3EE08F'; // Neon mint ink
+    ctx.strokeStyle = '#3EE08F'; 
     ctx.lineWidth = 3;
+
+    // Save the initial blank canvas to history
+    const initialState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    setHistory([initialState]);
+    setHistoryStep(0);
 
     const handleResize = () => {
         const tempCanvas = document.createElement('canvas');
@@ -38,11 +48,15 @@ const MathCanvas = () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(tempCanvas, 0, 0);
         ctx.lineCap = 'round';
-        ctx.strokeStyle = '#3EE08F';
-        ctx.lineWidth = 3;
+        
+        // Ensure we keep the most recent history step accurate after resize
+        const resizedState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        setHistory(prev => [...prev.slice(0, historyStep), resizedState]);
     };
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getPos = (e) => {
@@ -62,7 +76,6 @@ const MathCanvas = () => {
     setIsDrawing(true);
     setStartX(x);
     setStartY(y);
-    // Take a snapshot of the canvas before drawing the new shape
     setSnapshot(ctx.getImageData(0, 0, canvas.width, canvas.height));
     
     ctx.beginPath();
@@ -76,12 +89,15 @@ const MathCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    // If drawing a shape, restore the snapshot first to clear the preview
-    if (tool !== 'pen' && snapshot) {
+    if (tool !== 'pen' && tool !== 'eraser' && snapshot) {
       ctx.putImageData(snapshot, 0, 0);
     }
 
-    if (tool === 'pen') {
+    // Set styling based on whether it's a pen or an eraser
+    ctx.strokeStyle = tool === 'eraser' ? '#1A1B26' : '#3EE08F';
+    ctx.lineWidth = tool === 'eraser' ? 25 : 3;
+
+    if (tool === 'pen' || tool === 'eraser') {
       ctx.lineTo(x, y);
       ctx.stroke();
     } else if (tool === 'line') {
@@ -103,7 +119,30 @@ const MathCanvas = () => {
 
   const stopInteraction = (e) => {
     e.preventDefault();
+    if (isDrawing) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      // Take a new snapshot and push it to the history array
+      const currentCanvasState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const newHistory = history.slice(0, historyStep + 1); // Discard any "redo" futures if we draw something new
+      newHistory.push(currentCanvasState);
+      
+      setHistory(newHistory);
+      setHistoryStep(newHistory.length - 1);
+    }
     setIsDrawing(false);
+  };
+
+  // --- UNDO FUNCTION ---
+  const undo = () => {
+    if (historyStep > 0) {
+      const prevStep = historyStep - 1;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(history[prevStep], 0, 0);
+      setHistoryStep(prevStep);
+    }
   };
 
   const clearCanvas = () => {
@@ -111,6 +150,14 @@ const MathCanvas = () => {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#1A1B26';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Save the cleared state to history
+    const clearedState = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const newHistory = history.slice(0, historyStep + 1);
+    newHistory.push(clearedState);
+    setHistory(newHistory);
+    setHistoryStep(newHistory.length - 1);
+    
     setResult('');
   };
 
@@ -141,8 +188,6 @@ const MathCanvas = () => {
 
   return (
     <div className="dark-theme-wrapper">
-      
-      {/* HEADER SECTION */}
       <header className="glass-header">
         <div className="logo-container">
           <div className="logo-icon"></div>
@@ -156,7 +201,6 @@ const MathCanvas = () => {
         <button className="btn-outline">Log in</button>
       </header>
 
-      {/* MAIN CONTENT AREA */}
       <main className="main-content">
         <div className="hero-text">
           <h2>Make your complex math<br/>make complete sense</h2>
@@ -172,8 +216,12 @@ const MathCanvas = () => {
               <button className={`tool-btn ${tool === 'line' ? 'active' : ''}`} onClick={() => setTool('line')}>— Line</button>
               <button className={`tool-btn ${tool === 'rect' ? 'active' : ''}`} onClick={() => setTool('rect')}>▭ Rect</button>
               <button className={`tool-btn ${tool === 'circle' ? 'active' : ''}`} onClick={() => setTool('circle')}>◯ Circle</button>
+              <button className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`} onClick={() => setTool('eraser')}>▱ Eraser</button>
             </div>
             <div className="action-group">
+              <button onClick={undo} disabled={historyStep <= 0} className="btn-text" style={{ opacity: historyStep <= 0 ? 0.5 : 1 }}>
+                ↩ Undo
+              </button>
               <button onClick={clearCanvas} className="btn-text">Clear</button>
               <button onClick={calculateMath} disabled={isLoading} className="btn-primary">
                 {isLoading ? 'Solving...' : 'Calculate Now'}
