@@ -4,7 +4,7 @@ An advanced, full-stack educational platform that transforms handwritten equatio
 
 ## 🚀 Live Demo
 
-* **Frontend (Vercel):** [Your-Vercel-Deployment-URL]
+* **Frontend (Vercel):** `https://ai-i-pad-style-calculator.vercel.app/`
 * **Backend API (Render):** `https://ai-i-pad-style-calculator.onrender.com`
 
 ---
