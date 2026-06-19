@@ -320,40 +320,42 @@ const MathCanvas = () => {
 
         <div className="app-container glass-card">
           
+          
           {/* TOOLBAR */}
           <div className="toolbar">
             <div className="tool-group">
-              <button className={`tool-btn ${tool === 'pen' ? 'active' : ''}`} onClick={() => setTool('pen')}>✎</button>
-              <button className={`tool-btn ${tool === 'line' ? 'active' : ''}`} onClick={() => setTool('line')}>—</button>
-              <button className={`tool-btn ${tool === 'curve' ? 'active' : ''}`} onClick={() => { setTool('curve'); setCurveStep(0); }}>〰</button>
+              <button className={`tool-btn icon-btn ${tool === 'pen' ? 'active' : ''}`} onClick={() => setTool('pen')} title="Pen">✏️</button>
+              <button className={`tool-btn icon-btn ${tool === 'line' ? 'active' : ''}`} onClick={() => setTool('line')} title="Line">➖</button>
+              <button className={`tool-btn icon-btn ${tool === 'curve' ? 'active' : ''}`} onClick={() => { setTool('curve'); setCurveStep(0); }} title="Curve">〰️</button>
               
               {/* SHAPE DROPDOWN */}
               <div className="dropdown-container">
                 <button 
-                  className={`tool-btn ${['rect', 'circle', 'arrow'].includes(tool) ? 'active' : ''}`} 
+                  className={`tool-btn icon-btn ${['rect', 'circle', 'arrow'].includes(tool) ? 'active' : ''}`} 
                   onClick={() => setIsShapeMenuOpen(!isShapeMenuOpen)}
+                  title="Shapes"
                 >
-                  {tool === 'rect' ? '▭' : tool === 'circle' ? '◯' : tool === 'arrow' ? '↗' : '△ Shapes ▼'}
+                  {tool === 'rect' ? '▭' : tool === 'circle' ? '◯' : tool === 'arrow' ? '↗' : '▵'}
                 </button>
                 
                 {isShapeMenuOpen && (
                   <div className="dropdown-menu">
-                    <button onClick={() => { setTool('rect'); setIsShapeMenuOpen(false); }}>▭ Rectangle</button>
+                    <button onClick={() => { setTool('rect'); setIsShapeMenuOpen(false); }}>▭ Rect</button>
                     <button onClick={() => { setTool('circle'); setIsShapeMenuOpen(false); }}>◯ Circle</button>
                     <button onClick={() => { setTool('arrow'); setIsShapeMenuOpen(false); }}>↗ Arrow</button>
                   </div>
                 )}
               </div>
 
-              <button className={`tool-btn ${tool === 'text' ? 'active' : ''}`} onClick={() => setTool('text')}>Text</button>
-              <button className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`} onClick={() => setTool('eraser')}>▱ Eraser</button>
+              <button className={`tool-btn icon-btn ${tool === 'text' ? 'active' : ''}`} onClick={() => setTool('text')} title="Text">T</button>
+              <button className={`tool-btn icon-btn ${tool === 'eraser' ? 'active' : ''}`} onClick={() => setTool('eraser')} title="Eraser">▱</button>
             </div>
             
             <div className="action-group">
-              <button onClick={undo} disabled={historyStep <= 0} className="btn-text" style={{ opacity: historyStep <= 0 ? 0.5 : 1 }}>↩</button>
-              <button onClick={clearCanvas} className="btn-text">Clear</button>
+              <button onClick={undo} disabled={historyStep <= 0} className="icon-btn action-btn" title="Undo" style={{ opacity: historyStep <= 0 ? 0.5 : 1 }}>↩</button>
+              <button onClick={clearCanvas} className="icon-btn action-btn" title="Clear Canvas">🗑️</button>
               <button onClick={calculateMath} disabled={isLoading} className="btn-primary">
-                {isLoading ? 'Solving...' : 'Solve'}
+                {isLoading ? '...' : 'Solve'}
               </button>
             </div>
           </div>

@@ -137,58 +137,52 @@ body {
   border-bottom: 1px solid var(--border-glass);
 }
 
-.tool-group {
+.tool-group, .action-group {
   display: flex;
-  gap: 10px;
+  gap: 8px; /* Consistent, tight spacing between buttons */
+  align-items: center;
 }
 
-.tool-btn {
+/* Forces buttons to be perfect squares */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1.2rem;
+  border-radius: 8px;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-muted);
-  padding: 8px 16px;
-  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.tool-btn:hover {
+.icon-btn:hover {
   color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.tool-btn.active {
+.icon-btn.active {
   background: rgba(62, 224, 143, 0.1);
   color: var(--accent-mint);
   border-color: rgba(62, 224, 143, 0.3);
 }
 
-.action-group {
-  display: flex;
-  gap: 15px;
-  align-items: center;
+.action-btn {
+  font-size: 1.3rem; /* Make the undo and trash icons slightly larger */
 }
 
-.btn-text {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.btn-text:hover { color: var(--text-main); }
-
+/* Ensure the Solve button matches the height of the icons */
 .btn-primary {
-  background-color: var(--accent-mint);
-  color: var(--bg-deep);
-  border: none;
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 0 15px var(--accent-mint-glow);
-  transition: all 0.2s;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
 }
-
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 25px rgba(62, 224, 143, 0.5);
@@ -243,7 +237,13 @@ canvas {
 @media (max-width: 768px) {
   .hero-text h2 { font-size: 2.5rem; }
   .glass-header { flex-direction: column; gap: 20px; }
-  .glass-nav { display: none; }
+  .glass-nav { 
+    display: flex; 
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px; 
+    width: 100%;
+  }
   .toolbar { flex-direction: column; gap: 20px; align-items: stretch; }
   .tool-group { justify-content: center; flex-wrap: wrap; }
   .action-group { justify-content: space-between; }
