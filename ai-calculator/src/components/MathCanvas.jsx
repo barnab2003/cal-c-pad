@@ -3,14 +3,14 @@ import 'katex/dist/katex.min.css';
 import { BlockMath } from 'react-katex';
 import './MathCanvas.css';
 import customLogo from '../assets/my-logo.png';
-// Add this to your other imports at the top
 import { useAuth } from '../context/AuthContext';
-// Near your other imports at the top
 import AuthModal from './AuthModal';
+import HistorySidebar from './HistorySidebar'; 
 
 const MathCanvas = () => {
   const { token, isAuthenticated, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [result, setResult] = useState('');
@@ -214,7 +214,11 @@ const MathCanvas = () => {
         <nav className="glass-nav">
           <a href="#home">Home</a>
           <a href="#about">About</a>
-          <a href="#how">How it Works</a>
+          {isAuthenticated && (
+            <button className="text-link" onClick={() => setIsSidebarOpen(true)}>
+              My History
+            </button>
+          )}
         </nav>
         {/* Dynamically swap the button based on auth state */}
         {isAuthenticated ? (
@@ -278,6 +282,10 @@ const MathCanvas = () => {
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
+      />
+      <HistorySidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
       />
     </div>
   );
